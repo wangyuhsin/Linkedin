@@ -82,17 +82,14 @@ def search_scrape():
 
     # Loop through profile items on the page and extract links
     for item in soup.findAll("div", {"class": "entity-result__item"}):
-        link = (
-            item.find("div", {"class": "mb1"})
-            .find("a", {"class": "app-aware-link"})["href"]
-            .split("?")[0]
-            + "/"
-        )
-        action = item.find(
-            "div", {"class": "entity-result__actions entity-result__divider"}
-        ).find("button")["aria-label"]
-        if action != "Message ":
-            profile_links.append([link])
+        if len(profile_links) >= SCRAPE_NUM:
+            break
+        link_div = item.find("div", {"class": "mb1"})
+        if link_div:
+            link_element = link_div.find("a", {"class": "app-aware-link"})
+            if link_element and 'href' in link_element.attrs:
+                link = link_element["href"].split("?")[0] + "/"
+                profile_links.append([link])
 
     # Continue scrolling and collecting profile links until reaching the SCRAPE_NUM
     while len(profile_links) < SCRAPE_NUM:
@@ -111,19 +108,23 @@ def search_scrape():
 
         # Loop through profile items and extract links
         for item in soup.findAll("div", {"class": "entity-result__item"}):
-            link = (
-                item.find("div", {"class": "mb1"})
-                .find("a", {"class": "app-aware-link"})["href"]
-                .split("?")[0]
-                + "/"
-            )
-            action = item.find(
-                "div", {"class": "entity-result__actions entity-result__divider"}
-            ).find("button")["aria-label"]
-            if action != "Message ":
-                if len(profile_links) >= SCRAPE_NUM:
-                    break
-                profile_links.append([link])
+            if len(profile_links) >= SCRAPE_NUM:
+                break
+            link_div = item.find("div", {"class": "mb1"})
+            if link_div:
+                link_element = link_div.find("a", {"class": "app-aware-link"})
+                if link_element and 'href' in link_element.attrs:
+                    link = link_element["href"].split("?")[0] + "/"
+                    profile_links.append([link])
+
+                    # actions_div = item.find("div", {"class": "entity-result__actions entity-result__divider"})
+                    # if actions_div:
+                    #     button = actions_div.find("button")
+                    #     if button and 'aria-label' in button.attrs:
+                    #         action = button["aria-label"]
+                    #         if action != "Message ":
+                    #             profile_links.append([link])
+
 
     # Quit the web driver when done
     driver.quit()
