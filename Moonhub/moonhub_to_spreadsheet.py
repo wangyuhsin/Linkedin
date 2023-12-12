@@ -7,7 +7,7 @@ import pandas as pd
 from naas_drivers import linkedin, gsheet
 import naas
 
-from constants import *  # You might have constants defined in a separate file
+from constants import *
 
 # Function to convert CSV file to a DataFrame
 def csv_to_df(file_name):
