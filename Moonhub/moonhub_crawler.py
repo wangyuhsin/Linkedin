@@ -2,6 +2,7 @@ import sys
 import time
 import csv
 
+from tqdm import tqdm
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -43,7 +44,7 @@ def search_scrape():
 
     profile_links = []
 
-    for i in range(int(page_num)):
+    for i in tqdm(range(int(page_num))):
         time.sleep(5)
 
         # Click the "View Full Profile" button
