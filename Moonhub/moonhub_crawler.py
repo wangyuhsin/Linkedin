@@ -6,8 +6,11 @@ from tqdm import tqdm
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import ElementClickInterceptedException
 from bs4 import BeautifulSoup
 
+
+LINKEDIN_BUTTON = 5
 
 def search_scrape():
     # Configure Chrome to run in headless mode
@@ -45,10 +48,16 @@ def search_scrape():
     profile_links = []
 
     for i in tqdm(range(int(page_num))):
-        time.sleep(5)
+        time.sleep(10)
 
         # Click the "View Full Profile" button
-        driver.find_elements(By.XPATH, "//*[@id='view-full-profile-button']")[0].click()
+        try:
+            view_profile = driver.find_elements(By.XPATH, "//*[@id='view-full-profile-button']")
+            view_profile[0].click()
+        except ElementClickInterceptedException:
+            print("ElementClickInterceptedException: Click intercepted, breaking the loop.")
+            break
+
         time.sleep(5)
 
         for j in range(25):
@@ -56,7 +65,7 @@ def search_scrape():
             driver.find_elements(
                 By.CSS_SELECTOR,
                 "button.MuiButtonBase-root.MuiIconButton-root.MuiIconButton-sizeMedium.css-1a4yhh1[tabindex='0'][type='button']",
-            )[6].click()
+            )[LINKEDIN_BUTTON-1].click()
 
             # Switch to the new tab
             driver.switch_to.window(driver.window_handles[1])
@@ -81,23 +90,32 @@ def search_scrape():
             driver.close()
             driver.switch_to.window(driver.window_handles[0])
 
+            if len(profile_links) >= 2:
+                if profile_links[-1] == profile_links[-2]:
+                    profile_links = profile_links[:-1]
+                    break
+
             # Click the next button to reveal more profiles
             driver.find_elements(
                 By.CSS_SELECTOR,
                 "button.MuiButtonBase-root.MuiIconButton-root.MuiIconButton-sizeMedium.css-1a4yhh1[tabindex='0'][type='button']",
-            )[4].click()
+            )[LINKEDIN_BUTTON-3].click()
 
         # Close the current tab
         driver.find_elements(
             By.CSS_SELECTOR,
             "button.MuiButtonBase-root.MuiIconButton-root.MuiIconButton-sizeMedium.css-1a4yhh1[tabindex='0'][type='button']",
-        )[5].click()
+        )[LINKEDIN_BUTTON-2].click()
 
         # Click the next page button to load more profiles
-        driver.find_elements(
-            By.CSS_SELECTOR,
-            "button.MuiButtonBase-root.MuiPaginationItem-circular.MuiPaginationItem-previousNext.MuiPaginationItem-root.MuiPaginationItem-sizeSmall.MuiPaginationItem-text.MuiPaginationItem-textPrimary.css-3ta4e3[aria-label='Go to next page'][tabindex='0'][type='button']",
-        )[0].click()
+        next_page = driver.find_elements(
+                        By.CSS_SELECTOR,
+                        "button.MuiButtonBase-root.MuiPaginationItem-circular.MuiPaginationItem-previousNext.MuiPaginationItem-root.MuiPaginationItem-sizeSmall.MuiPaginationItem-text.MuiPaginationItem-textPrimary.css-3ta4e3[aria-label='Go to next page'][tabindex='0'][type='button']",
+                    )
+        if next_page != []:
+            next_page[0].click()
+        else:
+            break
 
     driver.quit()
 
