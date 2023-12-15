@@ -1,6 +1,7 @@
 import csv
 import time
 from datetime import datetime
+import requests
 
 from tqdm import tqdm
 import pandas as pd
@@ -20,7 +21,6 @@ def csv_to_df(file_name):
     # Define DataFrame columns
     columns = [
         "Name",
-        "Email Address",
         "LinkedIn",
         "Current Role",
         "Location",
@@ -36,69 +36,96 @@ def csv_to_df(file_name):
     moonhub_df = pd.DataFrame(columns=columns)
     df_gsheet = gsheet.connect(SPREADSHEET_URL).get(sheet_name=SHEET_NAME)
     if len(df_gsheet) != 0:
-        exist = set(df_gsheet['LinkedIn'])
+        exist = set(df_gsheet["LinkedIn"])
     else:
         exist = set()
 
     # Loop through LinkedIn profile links and extract data
     for i in tqdm(range(len(links))):
         if links[i] not in exist:
-            resume_df = linkedin.connect(LI_AT, JSESSIONID).profile.get_resume(links[i])
-            identity_df = linkedin.connect(LI_AT, JSESSIONID).profile.get_identity(links[i])
-            contact_df = linkedin.connect(LI_AT, JSESSIONID).profile.get_contact(links[i])
+            try:
+                resume_df = linkedin.connect(LI_AT, JSESSIONID).profile.get_resume(
+                    links[i]
+                )
+                identity_df = linkedin.connect(LI_AT, JSESSIONID).profile.get_identity(
+                    links[i]
+                )
 
-            # Extract various fields from the data
-            full_name = resume_df["FULL_NAME"][0]
-            email = contact_df["EMAIL"][0]
-            Linkedin = links[i]
-            location = identity_df["REGION"][0]
-            if len(resume_df[resume_df["CATEGORY"] == "Experience"]) != 0:
-                current_role = resume_df[resume_df["CATEGORY"] == "Experience"].iloc[0][
-                    "TITLE"
-                ]
-                company = resume_df[resume_df["CATEGORY"] == "Experience"].iloc[0]["PLACE"]
-                title = resume_df[resume_df["CATEGORY"] == "Experience"].iloc[0]["TITLE"]
-                start_date = resume_df[resume_df["CATEGORY"] == "Experience"].iloc[0][
-                    "DATE_START"
-                ]
-                if start_date.endswith("00"):
-                    start_date = start_date.split("-")[0]
-                else:
-                    start_date = str(datetime.strptime(start_date, "%Y-%m").strftime("%b %Y"))
-                end_date = resume_df[resume_df["CATEGORY"] == "Experience"].iloc[0][
-                    "DATE_END"
-                ]
-                if end_date.endswith("00"):
-                    end_date = end_date.split("-")[0]
-                else:
-                    if end_date != "Present":
-                        end_date = str(datetime.strptime(end_date, "%Y-%m").strftime("%b %Y"))
-                        current = "FALSE"
+                # Extract various fields from the data
+                full_name = resume_df["FULL_NAME"][0]
+                Linkedin = links[i]
+                location = identity_df["REGION"][0]
+                if len(resume_df[resume_df["CATEGORY"] == "Experience"]) != 0:
+                    current_role = resume_df[
+                        resume_df["CATEGORY"] == "Experience"
+                    ].iloc[0]["TITLE"]
+                    company = resume_df[resume_df["CATEGORY"] == "Experience"].iloc[0][
+                        "PLACE"
+                    ]
+                    title = resume_df[resume_df["CATEGORY"] == "Experience"].iloc[0][
+                        "TITLE"
+                    ]
+                    start_date = resume_df[resume_df["CATEGORY"] == "Experience"].iloc[
+                        0
+                    ]["DATE_START"]
+                    if start_date is not None:
+                        if start_date.endswith("00"):
+                            start_date = start_date.split("-")[0]
+                        else:
+                            start_date = str(
+                                datetime.strptime(start_date, "%Y-%m").strftime("%b %Y")
+                            )
                     else:
-                        current = "TRUE"
-            else:
-                current_role = None
-                company = None
-                title = None
-                start_date = None
-                end_date = None
-                current = None
+                        start_date = None
+                    end_date = resume_df[resume_df["CATEGORY"] == "Experience"].iloc[0][
+                        "DATE_END"
+                    ]
+                    if end_date is not None:
+                        if end_date.endswith("00"):
+                            end_date = end_date.split("-")[0]
+                        else:
+                            if end_date != "Present":
+                                end_date = str(
+                                    datetime.strptime(end_date, "%Y-%m").strftime(
+                                        "%b %Y"
+                                    )
+                                )
+                                current = "FALSE"
+                            else:
+                                current = "TRUE"
+                    else:
+                        end_date = None
+                        current = None
+                else:
+                    current_role = None
+                    company = None
+                    title = None
+                    start_date = None
+                    end_date = None
+                    current = None
 
-            if len(resume_df[resume_df["CATEGORY"] == "Education"]) != 0:
-                university = resume_df[resume_df["CATEGORY"] == "Education"].iloc[0][
-                    "PLACE"
-                ]
-                degree = resume_df[resume_df["CATEGORY"] == "Education"].iloc[0]["TITLE"]
-                field = resume_df[resume_df["CATEGORY"] == "Education"].iloc[0]["FIELD"]
-            else:
-                university = None
-                degree = None
-                field = None
+                if len(resume_df[resume_df["CATEGORY"] == "Education"]) != 0:
+                    university = resume_df[resume_df["CATEGORY"] == "Education"].iloc[
+                        0
+                    ]["PLACE"]
+                    degree = resume_df[resume_df["CATEGORY"] == "Education"].iloc[0][
+                        "TITLE"
+                    ]
+                    field = resume_df[resume_df["CATEGORY"] == "Education"].iloc[0][
+                        "FIELD"
+                    ]
+                else:
+                    university = None
+                    degree = None
+                    field = None
+
+            except requests.exceptions.HTTPError as e:
+                print(f"Not Found for url: {links[i]}. Continue...")
+                continue
 
             # Append the extracted data to the DataFrame
             moonhub_df.loc[len(moonhub_df.index)] = [
                 full_name,
-                email,
                 Linkedin,
                 current_role,
                 location,

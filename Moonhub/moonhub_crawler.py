@@ -7,10 +7,9 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.common.exceptions import WebDriverException
 from bs4 import BeautifulSoup
 
-
-LINKEDIN_BUTTON = 5
 
 def search_scrape():
     # Configure Chrome to run in headless mode
@@ -48,70 +47,125 @@ def search_scrape():
     profile_links = []
 
     for i in tqdm(range(int(page_num))):
-        time.sleep(10)
-
+        time.sleep(5)
         # Click the "View Full Profile" button
         try:
-            view_profile = driver.find_elements(By.XPATH, "//*[@id='view-full-profile-button']")
+            view_profile = driver.find_elements(
+                By.XPATH, "//*[@id='view-full-profile-button']"
+            )
             view_profile[0].click()
         except ElementClickInterceptedException:
-            print("ElementClickInterceptedException: Click intercepted, breaking the loop.")
+            print(
+                "ElementClickInterceptedException: Click intercepted, breaking the loop."
+            )
             break
 
-        time.sleep(5)
-
         for j in range(25):
-            # Click a button to reveal LinkedIn profile URL
-            driver.find_elements(
-                By.CSS_SELECTOR,
-                "button.MuiButtonBase-root.MuiIconButton-root.MuiIconButton-sizeMedium.css-1a4yhh1[tabindex='0'][type='button']",
-            )[LINKEDIN_BUTTON-1].click()
+            try:
+                condition = 0
+                time.sleep(1)
+                # Click a button to reveal LinkedIn profile URL
+                driver.find_elements(
+                    By.CSS_SELECTOR,
+                    "button.MuiButtonBase-root.MuiIconButton-root.MuiIconButton-sizeMedium.css-1a4yhh1[tabindex='0'][type='button']",
+                )[-1].click()
 
-            # Switch to the new tab
-            driver.switch_to.window(driver.window_handles[1])
-            time.sleep(5)
-            profile_url = driver.current_url
+                # Switch to the new tab
+                if len(driver.window_handles) > 1:
+                    driver.switch_to.window(driver.window_handles[1])
+                else:
+                    continue
+                time.sleep(2)
+                profile_url = driver.current_url
 
-            # Extract the LinkedIn profile URL
-            if not profile_url.startswith("https://www.linkedin.com/checkpoint/"):
-                if "sessionRedirect" in profile_url:
-                    profile_links.append(
-                        [
+                if profile_url.startswith("https://github.com/"):
+                    condition = 1
+                    driver.close()
+                    driver.switch_to.window(driver.window_handles[0])
+                    driver.find_elements(
+                        By.CSS_SELECTOR,
+                        "button.MuiButtonBase-root.MuiIconButton-root.MuiIconButton-sizeMedium.css-1a4yhh1[tabindex='0'][type='button']",
+                    )[-2].click()
+                    # Switch to the new tab
+                    if len(driver.window_handles) > 1:
+                        driver.switch_to.window(driver.window_handles[1])
+                    else:
+                        continue
+                    time.sleep(2)
+                    profile_url = driver.current_url
+
+                # Extract the LinkedIn profile URL
+                if not profile_url.startswith("https://www.linkedin.com/checkpoint/"):
+                    if "sessionRedirect" in profile_url:
+                        link = (
                             profile_url.split("sessionRedirect=")[1]
                             .replace("%3A", ":")
                             .replace("%2F", "/")
                             .split("%")[0]
-                        ]
-                    )
+                        )
+                        if link != "https://www.linkedin.com/in/":
+                            profile_links.append([link])
+                    else:
+                        link = profile_url.split("?original_referer=")[0]
+                        if link != "https://www.linkedin.com/in/":
+                            profile_links.append([link])
+
+                # Close the new tab and switch back to the main tab
+                driver.close()
+                driver.switch_to.window(driver.window_handles[0])
+
+                # Click the next button to reveal more profiles
+                if condition == 0:
+                    driver.find_elements(
+                        By.CSS_SELECTOR,
+                        "button.MuiButtonBase-root.MuiIconButton-root.MuiIconButton-sizeMedium.css-1a4yhh1[tabindex='0'][type='button']",
+                    )[-3].click()
                 else:
-                    profile_links.append([profile_url.split("?original_referer=")[0]])
+                    driver.find_elements(
+                        By.CSS_SELECTOR,
+                        "button.MuiButtonBase-root.MuiIconButton-root.MuiIconButton-sizeMedium.css-1a4yhh1[tabindex='0'][type='button']",
+                    )[-4].click()
+            except WebDriverException as e:
+                print(f"Error encountered: {e}. Skipping to the next profile.")
+                driver.switch_to.window(driver.window_handles[0])
+                # Click the next button to reveal more profiles
+                if condition == 0:
+                    driver.find_elements(
+                        By.CSS_SELECTOR,
+                        "button.MuiButtonBase-root.MuiIconButton-root.MuiIconButton-sizeMedium.css-1a4yhh1[tabindex='0'][type='button']",
+                    )[-3].click()
+                else:
+                    driver.find_elements(
+                        By.CSS_SELECTOR,
+                        "button.MuiButtonBase-root.MuiIconButton-root.MuiIconButton-sizeMedium.css-1a4yhh1[tabindex='0'][type='button']",
+                    )[-4].click()
+                continue
 
-            # Close the new tab and switch back to the main tab
-            driver.close()
-            driver.switch_to.window(driver.window_handles[0])
-
-            if len(profile_links) >= 2:
-                if profile_links[-1] == profile_links[-2]:
-                    profile_links = profile_links[:-1]
-                    break
-
-            # Click the next button to reveal more profiles
+        # Close the current tab
+        if condition == 0:
             driver.find_elements(
                 By.CSS_SELECTOR,
                 "button.MuiButtonBase-root.MuiIconButton-root.MuiIconButton-sizeMedium.css-1a4yhh1[tabindex='0'][type='button']",
-            )[LINKEDIN_BUTTON-3].click()
+            )[-2].click()
+        else:
+            driver.find_elements(
+                By.CSS_SELECTOR,
+                "button.MuiButtonBase-root.MuiIconButton-root.MuiIconButton-sizeMedium.css-1a4yhh1[tabindex='0'][type='button']",
+            )[-3].click()
 
-        # Close the current tab
-        driver.find_elements(
-            By.CSS_SELECTOR,
-            "button.MuiButtonBase-root.MuiIconButton-root.MuiIconButton-sizeMedium.css-1a4yhh1[tabindex='0'][type='button']",
-        )[LINKEDIN_BUTTON-2].click()
+        time.sleep(2)
 
         # Click the next page button to load more profiles
-        next_page = driver.find_elements(
-                        By.CSS_SELECTOR,
-                        "button.MuiButtonBase-root.MuiPaginationItem-circular.MuiPaginationItem-previousNext.MuiPaginationItem-root.MuiPaginationItem-sizeSmall.MuiPaginationItem-text.MuiPaginationItem-textPrimary.css-3ta4e3[aria-label='Go to next page'][tabindex='0'][type='button']",
-                    )
+        if i < 2:
+            next_page = driver.find_elements(
+                By.CSS_SELECTOR,
+                "button.MuiButtonBase-root.MuiPaginationItem-circular.MuiPaginationItem-previousNext.MuiPaginationItem-root.MuiPaginationItem-sizeSmall.MuiPaginationItem-text.MuiPaginationItem-textPrimary.css-3ta4e3[aria-label='Go to next page'][tabindex='0'][type='button']",
+            )
+        else:
+            next_page = driver.find_elements(
+                By.CSS_SELECTOR,
+                "button.MuiButtonBase-root.MuiPaginationItem-root.MuiPaginationItem-sizeSmall.MuiPaginationItem-text.MuiPaginationItem-circular.MuiPaginationItem-textPrimary.MuiPaginationItem-previousNext.css-3ta4e3[aria-label='Go to next page'][tabindex='0'][type='button']",
+            )
         if next_page != []:
             next_page[0].click()
         else:
