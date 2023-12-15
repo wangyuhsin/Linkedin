@@ -67,14 +67,6 @@ Once you have completed the setup, you can proceed to run the scripts. This proj
 
 This script should be run on your local machine. It will scrape LinkedIn profiles from <b>your last search</b> on Moonhub and save the data to a CSV file.
 
-#### Important Note on Locating the LinkedIn Button
-
-Since Moonhub does not have an ID for each button and it has a different number of buttons for every search result, we can only find the button order manually by inspecting its HTML file. There is a tutorial on how to do this in the [Demo Video](#demo-video). After finding the order, remember to change the value of `LINKEDIN_BUTTON` in `moonhub_crawler.py` accordingly.
-
-<img width="718" alt="截圖 2023-12-13 上午1 13 52" src="https://github.com/wangyuhsin/Linkedin/assets/76431031/0648f9b3-5743-466b-a289-1ed76754f206">
-
-After changing the value, you can execute the script:
-
  ```python
  $ python3 moonhub_crawler.py
  ```
@@ -88,7 +80,10 @@ Once the script completes, it will generate a file named `moonhub_list.csv` in t
 
 After generating the `moonhub_list.csv` file, you can run this script to process and upload the data to a Google Spreadsheet. This script is designed to be run on the [Naas cloud platform](https://app.naas.ai/user-redirect/naas/downloader?url=https://raw.githubusercontent.com/jupyter-naas/awesome-notebooks/master/LinkedIn/LinkedIn_Send_invitation_to_profile.ipynb).
 
-Remember to upload the `moonhub_list.csv` file and `moonhub_to_spreadsheet.py` script to Naas, and check the variables in `constants.py` before running it.
+Before running this script, remember to change the general access to <b>"anyone with the link can edit".</b>
+<img width="1440" alt="截圖 2023-12-14 下午10 47 35" src="https://github.com/wangyuhsin/Linkedin/assets/76431031/092bf5d5-3071-496e-ba83-5509cf9458f2">
+
+And make sure to upload the `moonhub_list.csv` file and `moonhub_to_spreadsheet.py` script to Naas, and check the variables in `constants.py` before running it.
 
 ```bash
 $ python3 moonhub_to_spreadsheet.py
