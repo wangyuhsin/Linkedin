@@ -80,11 +80,24 @@ Once the script completes, it will generate a file named `moonhub_list.csv` in t
 
 After generating the `moonhub_list.csv` file, you can run this script to process and upload the data to a Google Spreadsheet. This script is designed to be run on the [Naas cloud platform](https://app.naas.ai/user-redirect/naas/downloader?url=https://raw.githubusercontent.com/jupyter-naas/awesome-notebooks/master/LinkedIn/LinkedIn_Send_invitation_to_profile.ipynb).
 
-Before running this script, remember to change the general access to <b>"anyone with the link can edit".</b>
+Before running this script, remember to change the access settings of the spreadsheet to <b>"anyone with the link can edit".</b>
 
 <img width="1440" alt="截圖 2023-12-14 下午10 47 35" src="https://github.com/wangyuhsin/Linkedin/assets/76431031/092bf5d5-3071-496e-ba83-5509cf9458f2">
 
 And make sure to upload the `moonhub_list.csv` file and `moonhub_to_spreadsheet.py` script to Naas, and check the variables in `constants.py` before running it.
+
+| :warning:     | Please note that you are limited to processing a maximum of 300 LinkedIn profiles per day.|
+|---------------|:------------------------------------------------------------------------------------------|
+
+Therefore, it's important to check the length of `moonhub_list.csv` using the following command:
+
+```bash
+$ wc -l moonhub_list.csv
+```
+
+If the file contains more than 300 links, consider removing some of the links and saving them for processing on another day. For more detailed information on LinkedIn automation best practices, refer to [this article](https://phantombuster.com/blog/guides/linkedin-automation-rate-limits-2021-edition-5pFlkXZFjtku79DltwBF0M).
+
+Once everything is set up, you can run the script:
 
 ```bash
 $ python3 moonhub_to_spreadsheet.py
@@ -98,4 +111,4 @@ The script will read the `moonhub_list.csv` file, connect with LinkedIn APIs to 
 By following these steps, you should be able to successfully execute the scripts and automate the process of scraping profiles from Moonhub and updating a Google Spreadsheet with the data.
 
 ### Demo Video
-[<img width="1072" alt="截圖 2023-12-12 下午7 48 20" src="https://github.com/wangyuhsin/Linkedin/assets/76431031/2f8454f1-bd04-4a9c-8db6-e0851c59f849">](https://youtu.be/SWCqzP-892I)
+[<img width="1072" alt="截圖 2023-12-12 下午7 48 20" src="https://github.com/wangyuhsin/Linkedin/assets/76431031/2f8454f1-bd04-4a9c-8db6-e0851c59f849">](https://youtu.be/V9-Epbsa8Z0)
