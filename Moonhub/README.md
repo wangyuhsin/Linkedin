@@ -81,6 +81,7 @@ Once the script completes, it will generate a file named `moonhub_list.csv` in t
 After generating the `moonhub_list.csv` file, you can run this script to process and upload the data to a Google Spreadsheet. This script is designed to be run on the [Naas cloud platform](https://app.naas.ai/user-redirect/naas/downloader?url=https://raw.githubusercontent.com/jupyter-naas/awesome-notebooks/master/LinkedIn/LinkedIn_Send_invitation_to_profile.ipynb).
 
 Before running this script, remember to change the general access to <b>"anyone with the link can edit".</b>
+
 <img width="1440" alt="截圖 2023-12-14 下午10 47 35" src="https://github.com/wangyuhsin/Linkedin/assets/76431031/092bf5d5-3071-496e-ba83-5509cf9458f2">
 
 And make sure to upload the `moonhub_list.csv` file and `moonhub_to_spreadsheet.py` script to Naas, and check the variables in `constants.py` before running it.
